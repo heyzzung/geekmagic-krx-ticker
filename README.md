@@ -29,7 +29,7 @@ arduino-cli lib install "Adafruit GFX Library" "Adafruit ST7735 and ST7789 Libra
 Arduino 스케치 규칙상 폴더 이름과 `.ino` 이름이 같아야 한다 (`geekmagic-krx-ticker/geekmagic-krx-ticker.ino`).
 
 ```sh
-git clone https://github.com/hjchung/geekmagic-krx-ticker.git
+git clone https://github.com/heyzzung/geekmagic-krx-ticker.git
 cd geekmagic-krx-ticker
 cp secrets.example.h secrets.h   # 값 채우기
 arduino-cli compile --fqbn esp8266:esp8266:generic:eesz=4M1M --output-dir build .

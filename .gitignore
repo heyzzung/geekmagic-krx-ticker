@@ -4,8 +4,10 @@ build/
 # Wi-Fi·OTA 비밀번호 — secrets.example.h 를 복사해서 만든다
 secrets.h
 
-# 참고용 이미지·폰트 원본
-*.png
+# 이 컴퓨터에만 두는 파일 (원본 사진·영상, 참고 이미지, 메모)
+local/
+
+# 폰트 원본
 tools/*.otf
 tools/*.ttf
 

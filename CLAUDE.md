@@ -20,6 +20,8 @@
   - 실행: Pillow 가 있는 venv 에서 `python gen_font.py Pretendard-Bold.otf ../font_kr.h`
   - 폰트 라이선스: `tools/Pretendard-LICENSE.txt` (SIL OFL)
 - `secrets.h` — Wi-Fi SSID/비밀번호, OTA 계정, AP 비밀번호. git 제외(`.gitignore`), 형식은 `secrets.example.h`
+- `local/` — git 제외. 원본 사진·영상, 참고 이미지(`참고1.png`), 메모. 컴퓨터를 바꾸면 따로 옮길 것
+- `docs/` — README 용으로 줄인 사진·GIF (git 포함)
 
 ## 데이터 출처 (네이버 증권, 비공식 — 바뀌거나 막힐 수 있음)
 - 시세: `http://polling.finance.naver.com/api/realtime/domestic/stock/<코드,코드,...>` — 여러 종목 한 번에

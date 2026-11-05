@@ -2,6 +2,8 @@
 
 GeekMagic SmallTV Ultra(ESP8266) 용 국내 주식 시세 표시기 펌웨어. 기기 이름은 **GeekStock**.
 
+<img src="docs/device.jpg" width="360" alt="GeekStock 실행 화면 (NXT 애프터마켓 시세)">
+
 - 종목명 / 장 상태 점 / 시계
 - 현재가 (7-세그먼트, 일의 자리부터 촤라락 올라가는 갱신 효과)
 - 전일 대비 증감 · 등락률 (상승 빨강, 하락 파랑)

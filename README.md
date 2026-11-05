@@ -26,22 +26,23 @@ arduino-cli core install esp8266:esp8266
 arduino-cli lib install "Adafruit GFX Library" "Adafruit ST7735 and ST7789 Library" ArduinoJson
 ```
 
-Arduino 스케치 규칙상 폴더 이름이 `stock` 이어야 한다 (`stock/stock.ino`).
+Arduino 스케치 규칙상 폴더 이름과 `.ino` 이름이 같아야 한다 (`geekmagic-krx-ticker/geekmagic-krx-ticker.ino`).
 
 ```sh
-git clone https://github.com/hjchung/geekmagic-krx-ticker.git stock
-cp stock/secrets.example.h stock/secrets.h   # 값 채우기
-arduino-cli compile --fqbn esp8266:esp8266:generic:eesz=4M1M --output-dir stock/build stock
+git clone https://github.com/hjchung/geekmagic-krx-ticker.git
+cd geekmagic-krx-ticker
+cp secrets.example.h secrets.h   # 값 채우기
+arduino-cli compile --fqbn esp8266:esp8266:generic:eesz=4M1M --output-dir build .
 ```
 
 확인한 라이브러리 버전: Adafruit GFX 1.13.0, Adafruit ST7735 and ST7789 1.12.0, ArduinoJson 7.4.3
 
 ## 업로드 (OTA)
 
-브라우저로 `http://<기기IP>/update` 에 `build/stock.ino.bin` 을 올리거나:
+브라우저로 `http://<기기IP>/update` 에 `build/geekmagic-krx-ticker.ino.bin` 을 올리거나:
 
 ```sh
-curl -u <OTA_USER>:<OTA_PASS> -F "firmware=@stock/build/stock.ino.bin" http://<기기IP>/update
+curl -u <OTA_USER>:<OTA_PASS> -F "firmware=@build/geekmagic-krx-ticker.ino.bin" http://<기기IP>/update
 ```
 
 기기 주소는 `http://geekstock.local/` (mDNS) 로도 접속된다.

@@ -1,4 +1,4 @@
-# stock — 국내 주식 시세 표시기
+# geekmagic-krx-ticker — 국내 주식 시세 표시기 (기기 이름 GeekStock)
 
 하드웨어·빌드·업로드는 `README.md` 참고 (로컬 작업 환경의 공통 규칙은 `../CLAUDE.md`).
 
@@ -9,7 +9,7 @@
 - 기기 웹 페이지: `/` 상태, `/settings` 설정(Wi-Fi·종목 코드·간격·밝기, 코드 입력 시 종목명 표시), `/quotes` 받은 시세 표, `/lookup?codes=` 종목명 조회 JSON, `/update` OTA
 
 ## 파일 구성
-- `stock.ino` — 레이아웃 상수, 화면 그리기(drawHeader/drawQuote/drawChart), 장 시간 처리(shouldFetch), loop
+- `geekmagic-krx-ticker.ino` — 레이아웃 상수, 화면 그리기(drawHeader/drawQuote/drawChart), 장 시간 처리(shouldFetch), loop
 - `ota.*` — Wi-Fi(STA, 실패 시 AP `GeekStock` + 캡티브 포털), mDNS, `/update`, 복구 모드(EEPROM 부팅 카운터)
 - `config.*` — LittleFS `/config.json`, `/settings` 페이지
 - `quote.*` — 시세 조회, `/quotes` 페이지
@@ -48,7 +48,7 @@
 - 복구 모드: 화면에 노란 "복구 모드" + 접속 IP 표시 (예전엔 까만 화면이라 먹통과 구분 안 됨). `/quotes`·`/settings` 없음(Not found)
 - AP 설정 모드(Wi-Fi 연결 실패): 화면에 AP 이름·비밀번호·`http://192.168.4.1` 안내, 시세 동작 안 함
 - `/` 상태 페이지: 이번 부팅 원인(ESP.getResetReason) + EEPROM 에 남긴 마지막 크래시(reason/exccause/epc1)
-  - epc 주소 → `xtensa-lx106-elf-addr2line -e build/stock.ino.elf 0x...` 로 위치 확인
+  - epc 주소 → `xtensa-lx106-elf-addr2line -e build/geekmagic-krx-ticker.ino.elf 0x...` 로 위치 확인
 - 장 시간 창: 평일 09:00~15:40 (15:30 마감 후 확정 종가용 10분), NXT 창: 평일 15:30~20:10
   - 정규장 마감 후(tradingSessionType `AFTER_MARKET`)에는 현재가·증감·등락률을 NXT 값으로 표시. 시가·차트는 정규장 그대로
   - 상태 점: NXT 값을 보여줄 때는 NXT 거래 중이면 하늘색

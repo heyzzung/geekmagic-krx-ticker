@@ -70,3 +70,7 @@ curl -u <OTA_USER>:<OTA_PASS> -F "firmware=@stock/build/stock.ino.bin" http://<�
 ## 폰트
 
 `font_kr.h` 는 [Pretendard](https://github.com/orioncactus/pretendard) Bold 22px 에서 `tools/gen_font.py` 로 생성한 비트맵 (KS X 1001 한글 2,350자 + ASCII). Pretendard 는 SIL Open Font License 1.1 — `tools/Pretendard-LICENSE.txt`.
+
+## 라이선스
+
+MIT — `LICENSE`. 단, `font_kr.h` 와 Pretendard 폰트는 SIL Open Font License 1.1 을 따른다.

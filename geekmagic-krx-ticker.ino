@@ -27,7 +27,7 @@
 #define COLOR_BG 0x0000     // 검정
 #define COLOR_TEXT 0xFFFF
 #define COLOR_PRICE 0xFD48  // 주황 #FFA840
-#define COLOR_UP 0xF208     // 상승 빨강 #F04040 (참고1.png 색을 진하게)
+#define COLOR_UP 0xF904     // 상승 빨강 #F82020 (#F04040 과 #FF0000 의 중간)
 #define COLOR_DOWN 0x4C1F   // 하락 파랑 #4A80FF
 #define COLOR_FLAT 0x8C71   // 보합/마감 회색
 #define COLOR_LIVE 0x4D7F   // 장중 표시 점 하늘색

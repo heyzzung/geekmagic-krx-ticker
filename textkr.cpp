@@ -42,12 +42,16 @@ static uint16_t blend565(uint16_t fg, uint16_t bg, uint8_t level) {
 
 static int16_t drawGlyph(Adafruit_GFX& g, int16_t x, int16_t y, int idx, const uint16_t* shades) {
   uint8_t w = pgm_read_byte(&FONT_KR_WIDTHS[idx]);
-  const uint8_t* bm = FONT_KR_BITMAPS + (uint32_t)idx * FONT_KR_STRIDE;
-  for (uint8_t row = 0; row < FONT_KR_HEIGHT; row++) {
-    for (uint8_t col = 0; col < w; col++) {
-      uint8_t b = pgm_read_byte(bm + row * FONT_KR_ROW_BYTES + (col >> 2));
-      uint8_t level = (b >> (6 - (col & 3) * 2)) & 3;
-      if (level) g.drawPixel(x + col, y + row, shades[level]);
+  // [첫 줄, 줄 수] 뒤에 잉크가 있는 줄만 2bit 씩 줄 경계 없이 이어져 있음
+  const uint8_t* bm = FONT_KR_BITMAPS + pgm_read_dword(&FONT_KR_OFFSETS[idx]);
+  uint8_t top = pgm_read_byte(bm);
+  uint8_t rows = pgm_read_byte(bm + 1);
+  bm += 2;
+  uint16_t bit = 0;
+  for (uint8_t row = 0; row < rows; row++) {
+    for (uint8_t col = 0; col < w; col++, bit += 2) {
+      uint8_t level = (pgm_read_byte(bm + (bit >> 3)) >> (6 - (bit & 7))) & 3;
+      if (level) g.drawPixel(x + col, y + top + row, shades[level]);
     }
   }
   return w + GLYPH_GAP;

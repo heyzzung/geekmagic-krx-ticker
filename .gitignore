@@ -1,0 +1,12 @@
+# 빌드 결과물
+build/
+
+# Wi-Fi·OTA 비밀번호 — secrets.example.h 를 복사해서 만든다
+secrets.h
+
+# 참고용 이미지·폰트 원본
+*.png
+tools/*.otf
+tools/*.ttf
+
+.DS_Store

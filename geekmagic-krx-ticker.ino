@@ -12,10 +12,9 @@
 #include "config.h"
 #include "ota.h"
 #include "quote.h"
-#include "secrets.h"
 #include "textkr.h"
 
-#define FW_VERSION "0.7.0"
+#define FW_VERSION "0.8.0"
 
 // SmallTV Ultra 핀 (실기기 확인 완료, 화면 방향은 rotation 2)
 #define TFT_DC 0
@@ -369,29 +368,30 @@ void setup() {
   // OTA 를 가장 먼저 띄운다. 이후 코드가 죽어도 업로드 경로는 남는다.
   recoveryMode = otaCheckRecovery();
   if (recoveryMode) {
-    // 복구 모드는 파일시스템도 건드리지 않고 secrets.h 의 Wi-Fi 만 쓴다.
-    // 화면은 접속 주소만 알려준다 (까만 화면이면 먹통과 구분이 안 됨).
-    otaBegin(FW_VERSION, WIFI_SSID, WIFI_PASS);
-    initDisplay(80);
-    String lines[] = {F("복구 모드"), otaAddress(), F("/update 로 펌웨어 업로드"),
-                      F("전원을 다시 켜면 정상 부팅")};
-    drawNotice(ST77XX_YELLOW, lines, 4);
+    // 복구 모드는 파일시스템(저장된 Wi-Fi·비밀번호)을 건드리지 않고 열린 AP 로만 뜬다.
+    // 화면은 접속 방법만 알려준다 (까만 화면이면 먹통과 구분이 안 됨).
+    otaBegin(FW_VERSION, "", "", "");
+    initDisplay(100);
+    String lines[] = {F("복구 모드"), F("Wi-Fi: " AP_SSID), otaAddress(),
+                      F("/update 로 펌웨어 업로드"), F("전원을 다시 켜면 정상 부팅")};
+    drawNotice(ST77XX_YELLOW, lines, 5);
     return;
   }
 
   configLoad();
-  otaBegin(FW_VERSION, config.wifiSsid, config.wifiPass);
+  otaBegin(FW_VERSION, config.wifiSsid, config.wifiPass, config.adminPass);
   configRegisterRoutes(otaServer());
   quoteRegisterRoutes(otaServer());
   configTime("KST-9", "pool.ntp.org", "time.google.com");
 
   initDisplay(config.brightness);
   if (otaIsApMode()) {
-    // Wi-Fi 연결 실패 → 기기가 만든 Wi-Fi 에 접속해 설정하도록 안내
+    // Wi-Fi 정보가 없거나 연결 실패 → 기기가 만든 Wi-Fi 에 접속해 설정하도록 안내
     apNotice = true;
-    String lines[] = {F("Wi-Fi 연결 실패"), String(F("Wi-Fi: ")) + AP_SSID,
-                      String(F("비밀번호: ")) + AP_PASS, F("접속 후 아래 주소에서 설정"),
-                      String(F("http://")) + otaAddress()};
+    String lines[] = {config.wifiSsid.isEmpty() ? F("Wi-Fi 설정 필요") : F("Wi-Fi 연결 실패"),
+                      F("Wi-Fi: " AP_SSID),
+                      F("비밀번호 없음"),
+                      F("접속 후 아래 주소에서 설정"), String(F("http://")) + otaAddress()};
     drawNotice(ST77XX_YELLOW, lines, 5);
     return;
   }

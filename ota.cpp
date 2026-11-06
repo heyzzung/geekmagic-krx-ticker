@@ -6,7 +6,6 @@
 #include <ESP8266WiFi.h>
 #include <ESP8266mDNS.h>
 
-#include "secrets.h"
 
 // 복구 모드 진입 조건: 부팅 후 STABLE_MS 안에 리셋(크래시 또는 전원 재투입)이
 // MAX_SHORT_BOOTS 번 연속되면 다음 부팅은 Wi-Fi + OTA 만 띄운다.
@@ -71,7 +70,7 @@ static void startAp() {
   apMode = true;
   // AP_STA: 설정 페이지에서 주변 Wi-Fi 스캔이 가능하도록
   WiFi.mode(WIFI_AP_STA);
-  WiFi.softAP(AP_SSID, AP_PASS);
+  WiFi.softAP(AP_SSID);
   // 모든 도메인을 기기로 돌려서 폰에서 캡티브 포털 창이 뜨게 한다
   dns.start(53, "*", WiFi.softAPIP());
 }
@@ -112,27 +111,34 @@ static void handleNotFound() {
   server.send(404, F("text/plain"), F("Not found"));
 }
 
-void otaBegin(const char* version, const String& ssid, const String& pass) {
+void otaBegin(const char* version, const String& ssid, const String& pass, const String& adminPass) {
   fwVersion = version;
 
   WiFi.persistent(false);
   WiFi.mode(WIFI_STA);
   WiFi.hostname("geekstock");
-  WiFi.begin(ssid, pass);
-  uint32_t start = millis();
-  while (WiFi.status() != WL_CONNECTED && millis() - start < WIFI_TIMEOUT_MS) {
-    delay(200);
+  if (ssid.length()) {
+    WiFi.begin(ssid, pass);
+    uint32_t start = millis();
+    while (WiFi.status() != WL_CONNECTED && millis() - start < WIFI_TIMEOUT_MS) {
+      delay(200);
+    }
   }
+  // Wi-Fi 정보가 없으면(첫 부팅·설정 초기화·복구 모드) 기다리지 않고 바로 설정 모드
   if (WiFi.status() != WL_CONNECTED) {
     startAp();
   }
 
   MDNS.begin("geekstock");
-  updater.setup(&server, "/update", OTA_USER, OTA_PASS);
+  updater.setup(&server, "/update", ADMIN_USER, adminPass);
   server.on("/", handleRoot);
   server.onNotFound(handleNotFound);
   server.begin();
   MDNS.addService("http", "tcp", 80);
+}
+
+void otaSetAdminPassword(const String& adminPass) {
+  updater.updateCredentials(ADMIN_USER, adminPass);
 }
 
 void otaHandle() {

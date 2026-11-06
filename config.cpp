@@ -4,7 +4,7 @@
 #include <ESP8266WiFi.h>
 #include <LittleFS.h>
 
-#include "secrets.h"
+#include "ota.h"
 
 Config config;
 
@@ -14,8 +14,6 @@ static bool restartRequested = false;
 
 static void setDefaults() {
   config = Config();
-  config.wifiSsid = WIFI_SSID;
-  config.wifiPass = WIFI_PASS;
   config.codes[0] = "005930";  // 삼성전자
   config.codeCount = 1;
 }
@@ -42,6 +40,7 @@ void configLoad() {
     config.wifiSsid = ssid;
     config.wifiPass = doc["pass"] | "";
   }
+  config.adminPass = doc["admin"] | "";
   JsonArray codes = doc["codes"];
   if (codes.size() > 0) {
     config.codeCount = 0;
@@ -60,6 +59,7 @@ bool configSave() {
   JsonDocument doc;
   doc["ssid"] = config.wifiSsid;
   doc["pass"] = config.wifiPass;
+  doc["admin"] = config.adminPass;
   JsonArray codes = doc["codes"].to<JsonArray>();
   for (uint8_t i = 0; i < config.codeCount; i++) {
     codes.add(config.codes[i]);
@@ -166,7 +166,16 @@ static void sendSettingsPage(ESP8266WebServer& server, const String& message) {
   body += config.refreshSec;
   body += F("'><label>밝기 (%)</label><input name='brightness' type='range' min='5' max='100' value='");
   body += config.brightness;
-  body += F("'><button type='submit'>저장</button></form>"
+  // 지금 비밀번호를 채워 둔다: 그대로 저장하면 유지, 지우고 저장하면 없앰
+  body += F("'><label>관리 비밀번호</label>"
+            "<input name='admin' type='password' autocomplete='new-password' placeholder='없음' value='");
+  body += htmlEscape(config.adminPass);
+  body += F("'><small>설정·펌웨어 업데이트 페이지를 보호 (사용자 이름 " ADMIN_USER "). 비우면 보호 안 함</small>"
+            "<button type='submit'>저장</button></form>"
+            "<form method='POST' action='/reset' style='margin-top:32px'"
+            " onsubmit=\"return confirm('Wi-Fi·종목·비밀번호를 모두 지우고 재시작합니다.')\">"
+            "<small>Wi-Fi·종목·관리 비밀번호를 지우고 처음 상태(설정 모드)로 재시작</small><br>"
+            "<button type='submit' style='margin-top:6px'>설정 초기화</button></form>"
             "<p><a href='/'>처음으로</a></p>");
   body += FPSTR(NAMES_SCRIPT);
   body += F("</body></html>");
@@ -217,6 +226,8 @@ static void handleSave(ESP8266WebServer& server) {
   config.rotateSec = constrain(server.arg("rotate").toInt(), 3, 600);
   config.refreshSec = constrain(server.arg("refresh").toInt(), 10, 3600);
   config.brightness = constrain(server.arg("brightness").toInt(), 5, 100);
+  config.adminPass = server.arg("admin");
+  otaSetAdminPassword(config.adminPass);
 
   if (!configSave()) {
     sendSettingsPage(server, F("저장 실패 (파일시스템 오류)"));
@@ -228,7 +239,8 @@ static void handleSave(ESP8266WebServer& server) {
   if (wifiChanged) {
     restartRequested = true;
     body += F("<p>저장했습니다. 새 Wi-Fi 로 연결하려고 재시작합니다.</p>"
-              "<p>연결에 실패하면 'GeekStock' Wi-Fi 에 접속해 다시 설정하세요.</p>");
+              "<p>연결되면 폰·PC 를 같은 Wi-Fi 에 연결하고 http://geekstock.local/ 로 접속하세요.</p>"
+              "<p>연결에 실패하면 '" AP_SSID "' Wi-Fi 에 접속해 다시 설정하세요.</p>");
   } else {
     body += F("<meta http-equiv='refresh' content='2;url=/settings'><p>저장했습니다.</p>");
   }
@@ -236,9 +248,34 @@ static void handleSave(ESP8266WebServer& server) {
   server.send(200, F("text/html; charset=utf-8"), body);
 }
 
+static void handleReset(ESP8266WebServer& server) {
+  LittleFS.remove(CONFIG_PATH);
+  restartRequested = true;
+  String body = FPSTR(PAGE_HEAD);
+  body += F("<p>설정을 지웠습니다. 재시작합니다.</p>"
+            "<p>기기 화면의 안내대로 '" AP_SSID "' Wi-Fi 에 접속해 다시 설정하세요.</p></body></html>");
+  server.send(200, F("text/html; charset=utf-8"), body);
+}
+
+// 관리 비밀번호가 있으면 Basic 인증 (/update 와 같은 계정)
+static bool authorized(ESP8266WebServer& server) {
+  if (config.adminPass.isEmpty() || server.authenticate(ADMIN_USER, config.adminPass.c_str())) {
+    return true;
+  }
+  server.requestAuthentication();
+  return false;
+}
+
 void configRegisterRoutes(ESP8266WebServer& server) {
-  server.on("/settings", HTTP_GET, [&server]() { sendSettingsPage(server, ""); });
-  server.on("/settings", HTTP_POST, [&server]() { handleSave(server); });
+  server.on("/settings", HTTP_GET, [&server]() {
+    if (authorized(server)) sendSettingsPage(server, "");
+  });
+  server.on("/settings", HTTP_POST, [&server]() {
+    if (authorized(server)) handleSave(server);
+  });
+  server.on("/reset", HTTP_POST, [&server]() {
+    if (authorized(server)) handleReset(server);
+  });
 }
 
 bool configTakeChanged() {

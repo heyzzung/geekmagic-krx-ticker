@@ -2,16 +2,16 @@
 
 하드웨어·빌드·업로드는 `README.md` 참고 (로컬 작업 환경의 공통 규칙은 `../CLAUDE.md`).
 
-## 현재 상태 (2026-11-05)
-- 펌웨어 0.7.0 (NXT 애프터마켓 표시 추가), 원래 계획 1~6단계 완료
+## 현재 상태 (2026-11-06)
+- 펌웨어 0.8.0 (빌드 하나로 배포: 첫 부팅 설정 모드, 관리 비밀번호, 설정 초기화, 기본 밝기 100%), 원래 계획 1~6단계 완료
   1. 화면 + OTA + 복구 모드 / 2. Wi-Fi 설정 페이지·설정 저장·NTP / 3. 시세 조회·로테이트
   4. 디자인(한글 종목명, 7-세그먼트) / 5. 당일 차트 / 6. 장 운영 시간 처리
-- 기기 웹 페이지: `/` 상태, `/settings` 설정(Wi-Fi·종목 코드·간격·밝기, 코드 입력 시 종목명 표시), `/quotes` 받은 시세 표, `/lookup?codes=` 종목명 조회 JSON, `/update` OTA
+- 기기 웹 페이지: `/` 상태, `/settings` 설정(Wi-Fi·종목 코드·간격·밝기·관리 비밀번호, 코드 입력 시 종목명 표시), `/reset` 설정 초기화(POST), `/quotes` 받은 시세 표, `/lookup?codes=` 종목명 조회 JSON, `/update` OTA
 
 ## 파일 구성
 - `geekmagic-krx-ticker.ino` — 레이아웃 상수, 화면 그리기(drawHeader/drawQuote/drawChart), 장 시간 처리(shouldFetch), loop
-- `ota.*` — Wi-Fi(STA, 실패 시 AP `GeekStock` + 캡티브 포털), mDNS, `/update`, 복구 모드(EEPROM 부팅 카운터)
-- `config.*` — LittleFS `/config.json`, `/settings` 페이지
+- `ota.*` — Wi-Fi(STA, SSID 없거나 실패 시 열린 AP `GeekStock` + 캡티브 포털), mDNS, `/update`, 복구 모드(EEPROM 부팅 카운터). AP 이름·관리 계정 이름(`admin`) 상수
+- `config.*` — LittleFS `/config.json`(Wi-Fi·종목·간격·밝기·관리 비밀번호 `admin`), `/settings`·`/reset`, 관리 비밀번호 Basic 인증
 - `quote.*` — 시세 조회, `/quotes` 페이지
 - `chart.*` — 분봉 조회(스트림 파싱), 108칸 차트 데이터, 차트 그리기
 - `textkr.*` — 한글 비트맵 폰트 출력(krDraw/krWidth), 7-세그먼트 숫자(segDrawRight)
@@ -19,7 +19,8 @@
 - `tools/gen_font.py` — 폰트 생성기 (Pretendard Bold 22px, KS X 1001 한글 2,350자 + ASCII, 2bpp)
   - 실행: Pillow 가 있는 venv 에서 `python gen_font.py Pretendard-Bold.otf ../font_kr.h`
   - 폰트 라이선스: `tools/Pretendard-LICENSE.txt` (SIL OFL)
-- `secrets.h` — Wi-Fi SSID/비밀번호, OTA 계정, AP 비밀번호. git 제외(`.gitignore`), 형식은 `secrets.example.h`
+- 빌드 시 비밀 값 없음 (0.8.0 에서 `secrets.h` 제거). 개인 Wi-Fi·비밀번호는 기기 `/config.json` 에만 있고 OTA 로 유지됨
+  - 그래서 직접 빌드한 `.bin` 이 곧 배포용. 로컬에 예전 `secrets.h` 가 남아 있어도 읽지 않음(.gitignore 유지)
 - `local/` — git 제외. 원본 사진·영상, 참고 이미지(`참고1.png`), 메모. 컴퓨터를 바꾸면 따로 옮길 것
 - `docs/` — README 용으로 줄인 사진·GIF (git 포함)
 
@@ -45,8 +46,11 @@
 - 세로 배치: 헤더 0~34, 현재가 43~95(잉크 46~90, 시계와 증감 사이 가운데), 증감 95~140(잉크 113~127), 차트 140~224(선 144~219). 증감↔차트 선 빈 간격 16px
 
 ## 동작 규칙
-- 복구 모드: 화면에 노란 "복구 모드" + 접속 IP 표시 (예전엔 까만 화면이라 먹통과 구분 안 됨). `/quotes`·`/settings` 없음(Not found)
-- AP 설정 모드(Wi-Fi 연결 실패): 화면에 AP 이름·비밀번호·`http://192.168.4.1` 안내, 시세 동작 안 함
+- 복구 모드: 설정 파일을 읽지 않고 열린 AP `GeekStock` 로만 뜸. 화면에 노란 "복구 모드" + Wi-Fi 이름 + `192.168.4.1` 표시. `/update` 비밀번호 없음. `/quotes`·`/settings` 없음(Not found)
+- AP 설정 모드(Wi-Fi 정보 없음 = "Wi-Fi 설정 필요" / 연결 실패 = "Wi-Fi 연결 실패"): 화면에 `GeekStock`·"비밀번호 없음"·`http://192.168.4.1` 안내, 시세 동작 안 함
+  - AP 모드에 들어가면 재부팅 전까지 STA 재시도 안 함 → 핫스팟이 꺼진 채 부팅했으면 전원을 한 번 다시 켜야 함
+- 관리 비밀번호: 처음엔 없음. `/settings` 에서 정하면 `/settings`·`/reset`·`/update` 를 `admin`/비밀번호로 보호. 잊으면 복구 모드로 업로드는 가능
+- 밝기 기본값 100% (75~80% 는 칙칙함). 복구 모드도 100%
 - `/` 상태 페이지: 이번 부팅 원인(ESP.getResetReason) + EEPROM 에 남긴 마지막 크래시(reason/exccause/epc1)
   - epc 주소 → `xtensa-lx106-elf-addr2line -e build/geekmagic-krx-ticker.ino.elf 0x...` 로 위치 확인
 - 장 시간 창: 평일 09:00~15:40 (15:30 마감 후 확정 종가용 10분), NXT 창: 평일 15:30~20:10
@@ -62,7 +66,7 @@
 ## 메모리 제약
 - 남은 heap 약 40KB. 화면은 `drawRow()` 로 줄 단위 GFXcanvas16 에 그린 뒤 전송(깜빡임 방지)
   - 줄 하나 최대 약 25KB, 차트는 3개 띠로 나눔. 전체 화면 지우기는 부팅 때 한 번만
-- 펌웨어 약 665KB (폰트 약 218KB 포함 — 글자마다 위아래 빈 줄·오른쪽 빈칸을 잘라 저장), OTA 한도 약 1019KB
+- 펌웨어 약 667KB (폰트 약 218KB 포함 — 글자마다 위아래 빈 줄·오른쪽 빈칸을 잘라 저장), OTA 한도 약 1019KB
 
 ## 남은 일
 - 15:40 이후 요청을 멈추는지 확인 (`/quotes` 의 "N초 전 갱신" 이 계속 커지는지)

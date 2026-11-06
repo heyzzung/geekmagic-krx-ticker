@@ -20,7 +20,8 @@ GeekMagic SmallTV Ultra(ESP8266) 용 국내 주식 시세 표시기 펌웨어.
 
 ## 설치
 
-1. 공장 펌웨어의 웹 업데이트 페이지에서 `geekmagic-krx-ticker.ino.bin` 을 올린다
+1. [Releases](https://github.com/heyzzung/geekmagic-krx-ticker/releases/latest) 에서 `geekmagic-krx-ticker-<버전>.bin` 을 받아
+   공장 펌웨어의 웹 업데이트 페이지에서 올린다 (직접 빌드했다면 `build/geekmagic-krx-ticker.ino.bin`)
 2. 재부팅하면 화면에 "Wi-Fi 설정 필요" 안내가 뜬다
 3. 폰이나 PC 로 `GeekStock` Wi-Fi(비밀번호 없음)에 접속하면 설정 페이지가 열린다
    (안 열리면 브라우저로 `http://192.168.4.1/settings`)

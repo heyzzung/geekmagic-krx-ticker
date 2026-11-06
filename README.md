@@ -1,6 +1,6 @@
 # geekmagic-krx-ticker
 
-GeekMagic SmallTV Ultra(ESP8266) 용 국내 주식 시세 표시기 펌웨어. 기기 이름은 **GeekStock**.
+GeekMagic SmallTV Ultra(ESP8266) 용 국내 주식 시세 표시기 펌웨어.
 
 <img src="docs/demo.webp" width="360" alt="GeekStock 실행 화면 (현재가·차트 갱신, 종목 로테이션)">
 
